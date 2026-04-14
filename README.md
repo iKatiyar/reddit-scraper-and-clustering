@@ -1,111 +1,157 @@
-## 🔥 Reddit Scraper & Clustering: Uncover Hidden Topics with AI
+# 🔍 Reddit Scraper & Topic Clustering
 
-Automated Reddit Scraping, Intelligent Clustering, and Data-Driven Insights
-Ever wondered what people are talking about on Reddit? This project lets you scrape Reddit posts, analyze trends, and cluster discussions into meaningful topics—all with powerful machine learning and NLP techniques.
+> End-to-end NLP pipeline — scrape Reddit posts via the Reddit API, extract TF-IDF keywords, embed with Doc2Vec, cluster with K-Means, and visualize with PCA and t-SNE. All posts stored in MongoDB.
 
-From data extraction to clustering and visualizing patterns, this project helps you automate insights from Reddit communities! 🚀
+---
 
-## 📌 Table of Contents
+## ✨ What It Does
 
-- 🎯 Features
-- 🛠️ Technologies Used
-- 📂 Project Structure
-- ⚙️ Installation
-- 🚀 How to Use
-- 🧠 Clustering Techniques
-- 📊 Results & Visualizations
-- 📜 License
+Point it at any subreddit → it automatically:
+1. **Scrapes** posts (title, body, comments, score, upvote ratio, preview images)
+2. **Cleans** content — strips HTML, masks usernames for privacy, runs OCR on image posts
+3. **Extracts keywords** using TF-IDF across all fetched posts
+4. **Embeds** documents using **Doc2Vec** (100-dimensional vectors)
+5. **Clusters** with **K-Means** + evaluates quality via silhouette score
+6. **Visualizes** clusters in 2D using **PCA** and **t-SNE**
+7. **Stores** everything (posts + cluster labels) in **MongoDB**
 
-## 🎯 Features
-- **Automated Reddit Scraping** – Collects posts from subreddits using the **Reddit API**
-- **Text Cleaning & Preprocessing** – Removes stopwords, lemmatizes text, and prepares for clustering
-- **AI-Powered Clustering** – Uses **K-Means, DBSCAN, PCA, and t-SNE** to uncover hidden patterns
-- **Interactive Visualizations** – Generates plots to explore Reddit discussions intuitively
-- **End-to-End Automation** – Run the entire pipeline with a single script
+---
 
-## 🛠️ Technologies Used
-- **🐍 Python** – Core programming language
-- **📊 Pandas & NumPy** – Data manipulation and numerical computing
-- **🛢️ MongoDB** – NoSQL database for storing Reddit posts efficiently
-- **🌐 PRAW (Python Reddit API Wrapper)**: Library used for fetching Reddit posts.
-- **🧠 Gensim** – Topic modeling and word embeddings (Word2Vec, LDA)
-- **🤖 Scikit-Learn** – Machine learning algorithms (K-Means, DBSCAN)
-- **📈 Matplotlib** – Data visualization
+## 🛠️ Tech Stack
 
-## 📂 Project Structure
+![Python](https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white)
+![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=flat-square&logo=scikit-learn&logoColor=white)
+![Gensim](https://img.shields.io/badge/Gensim-Doc2Vec-4B8BBE?style=flat-square&logoColor=white)
+![Pandas](https://img.shields.io/badge/Pandas-150458?style=flat-square&logo=pandas&logoColor=white)
+![Matplotlib](https://img.shields.io/badge/Matplotlib-11557C?style=flat-square&logoColor=white)
 
-	📂 reddit-scraper-clustering
-	├── automation.py        # Runs the entire pipeline in one go  
-	├── clustering.py        # Applies K-Means, DBSCAN, PCA, and t-SNE  
-	├── database.py          # Stores and retrieves Reddit posts  
-	├── download.py          # Fetches Reddit data using API  
-	├── extract.py           # Cleans and preprocesses text  
-	├── main.py              # Entry point for running the project  
-	├── clusters_pca.png     # PCA visualization of clustered data  
-	├── clusters_tsne.png    # t-SNE visualization of clusters  
-	├── README.md            # Project documentation  
-	└── requirements.txt     # Python dependencies  
+---
 
+## 🔄 Pipeline
 
-## ⚙️ Installation
+```
+Subreddit Input
+      │
+      ▼
+┌─────────────────┐
+│  PRAW Scraper   │  Fetches posts: title, body, score,
+│  (extract.py)   │  comments, upvote ratio, preview, permalink
+│                 │  + OCR on image posts (Tesseract)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  NLP Processor  │  HTML cleaning, username masking,
+│  (model.py)     │  TF-IDF keyword extraction per post
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│    MongoDB      │  Stores all post data + keywords
+│  (database.py)  │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Doc2Vec        │  Trains on post content →
+│  Embeddings     │  100-dim document vectors
+│  (clustering.py)│
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  K-Means        │  Clusters posts into N topics
+│  + Silhouette   │  Evaluates quality with silhouette score
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  PCA / t-SNE    │  Reduces to 2D for visualization
+│  Visualization  │  Saves clusters_pca.png / clusters_tsne.png
+└─────────────────┘
+```
 
-### 🔧 Step 1: Clone the Repository
-	git clone https://github.com/yourusername/reddit-scraper-clustering.git
-	cd reddit-scraper-clustering
- 
-###  📦 Step 2: Install Dependencies
-	pip install -r requirements.txt
+---
 
-### 🔑 Step 3: Get Reddit API Credentials
-	1. Go to Reddit's Developer Portal.
-	2. Create a script-based app.
-	3. Note down your client ID, client secret, and user agent.
-	4. Add these to your project’s authentication settings.
+## 🏗️ Architecture
 
-## 🚀 How to Use
+```
+reddit-scraper-and-clustering/
+├── main.py          # Entry point — interactive CLI
+├── automation.py    # One-command full pipeline runner
+├── extract.py       # Reddit scraping via PRAW
+├── model.py         # NLP: HTML cleaning, OCR, TF-IDF, username masking
+├── clustering.py    # Doc2Vec training, K-Means, PCA/t-SNE visualization
+├── database.py      # MongoDB connection + insert/query helpers
+├── query_cluster.py # Query posts by cluster label
+├── schema.py        # Post schema definition
+├── settings.py      # API credentials (loaded from env)
+├── requirements.txt
+└── clusters_pca.png / clusters_tsne.png  # Output visualizations
+```
 
-### 📥 1. Scrape Reddit Data
-Modify download.py to specify subreddits and keywords, then run:
+---
 
-	python download.py
-This will collect posts and store them in a database.
+## 🚀 Running Locally
 
-### 🔍 2. Extract & Clean Data
-Prepare text data for clustering:
+### Prerequisites
+- Python 3.10+
+- MongoDB running locally or a MongoDB Atlas URI
+- Reddit API credentials ([create app here](https://www.reddit.com/prefs/apps))
+- Tesseract OCR (optional, for image post text extraction)
 
-	python extract.py
-This removes stopwords, punctuation, and unwanted noise for better analysis.
+### Install & configure
 
-### 🤖 3. Perform AI-Powered Clustering
-Run:
+```bash
+git clone https://github.com/iKatiyar/reddit-scraper-and-clustering.git
+cd reddit-scraper-and-clustering
 
-	python clustering.py
-K-Means Clustering: Groups similar posts together
-DBSCAN: Identifies dense topic clusters
-PCA & t-SNE: Creates stunning visualizations of Reddit topics
+pip install -r requirements.txt
+```
 
-### 🔄 4. Automate Everything
-Run the full pipeline in one go:
+Edit `settings.py` with your credentials:
 
-	python automation.py
+```python
+REDDIT_CLIENT_ID     = "your_client_id"
+REDDIT_CLIENT_SECRET = "your_client_secret"
+REDDIT_USER_AGENT    = "your_app_name"
+MONGO_URI            = "mongodb://localhost:27017"
+MONGO_DB_NAME        = "reddit_clustering"
+MONGO_COLLECTION_NAME = "posts"
+```
 
-## 🧠 Clustering Techniques  
+### Run the full pipeline
 
-| **Method** | **Purpose** |
-|------------|------------|
-| **K-Means Clustering** | Groups similar Reddit posts into topics |
-| **DBSCAN** | Finds dense, noise-resistant clusters |
-| **PCA (Principal Component Analysis)** | Reduces dimensionality for visualization |
-| **t-SNE (t-distributed Stochastic Neighbor Embedding)** | Creates high-quality 2D visualizations |
+```bash
+python automation.py
+```
 
-## 📊 Results & Visualizations
-Once clustering is complete, you’ll get:
+Or step by step:
 
-📌 PCA-Based Clustering (clusters_pca.png) – Shows high-level structure of topics.  
-📌 t-SNE-Based Clustering (clusters_tsne.png) – Provides a detailed, nonlinear visualization.
+```bash
+python main.py        # Scrape posts interactively
+python clustering.py  # Embed, cluster, and visualize
+```
 
-These interactive insights help uncover what Reddit communities are discussing!
+---
 
-## 📜 License
-This project is licensed under the MIT License. See the LICENSE file for details.
+## 📊 Clustering Methods
 
+| Method | Role |
+|--------|------|
+| **TF-IDF** | Keyword extraction per post |
+| **Doc2Vec** | 100-dim semantic document embeddings |
+| **K-Means** | Partition posts into N topic clusters |
+| **Silhouette Score** | Evaluate cluster quality (−1 to +1) |
+| **PCA** | Linear 2D reduction for fast visualization |
+| **t-SNE** | Nonlinear 2D reduction for detailed topology |
+
+---
+
+## 📡 Output
+
+- `clusters_pca.png` — PCA 2D cluster plot with color-coded topics
+- `clusters_tsne.png` — t-SNE 2D cluster plot
+- MongoDB collection updated with `cluster` label on every post
+- CLI output of top keywords per cluster
